@@ -9,6 +9,7 @@ Bu bölümde konteynerleri adeta bir kaleye dönüştürecek ileri düzey güven
 Varsayılan olarak Docker konteynerleri içerideki süreçleri `root` kullanıcısı (UID: 0) olarak çalıştırır. Uygulamanızın çalışması için gerçekten root yetkisine ihtiyacı yoksa, bunu mutlaka engellemelisiniz.
 
 ### Dockerfile İçinde Kullanıcı Değişimi
+
 ```dockerfile
 FROM node:18-alpine
 
@@ -16,12 +17,10 @@ FROM node:18-alpine
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
-COPY package*.json ./
+COPY --chown=appuser:appgroup package*.json ./
 RUN npm install
-COPY . .
-
-# Dosya sahipliğini yeni kullanıcıya ver
-RUN chown -R appuser:appgroup /app
+# Dosyaları kopyalarken sahipliği değiştir (RUN chown kullanmak imaj boyutunu ikiye katlar!)
+COPY --chown=appuser:appgroup . .
 
 # Bundan sonraki tüm komutları root olmayan kullanıcıyla çalıştır
 USER appuser
@@ -43,6 +42,7 @@ Bu yöntemde konteyner içindeki `root` (UID 0), host makinede örneğin `dokku`
 Yani konteyner içinde kodunuz kendini root sanır, istediği dosyayı yükler ama dışarıya bir sızıntı olduğunda Linux çekirdeği onu kısıtlı bir alt-kullanıcı olarak görür.
 
 Aktivasyon için `daemon.json` (Bölüm 2) dosyasına şu satır eklenir:
+
 ```json
 {
   "userns-remap": "default"
@@ -60,6 +60,7 @@ docker run --rm \
   --cap-add NET_RAW \
   alpine ping -c 4 8.8.8.8
 ```
+
 *(Bu Alpine konteynerinden tüm yetkileri aldık, sadece ağ paketleri gönderebilmesi (ping atabilmesi) için NET_RAW yetkisini geri verdik. Oldukça kısıtlı ve güvenli bir konteyner elde ettik!)*
 
 ## 5. Linux Güvenlik Profilleri: AppArmor ve Seccomp
@@ -67,19 +68,22 @@ docker run --rm \
 Docker, Linux çekirdeğinin güvenlik modülleriyle mükemmel entegredir:
 
 - **Seccomp (Secure Computing):** Konteynerin işletim sistemine gönderebileceği sistem çağrılarını (syscalls) kısıtlar. Linux'ta yaklaşık 330 syscall vardır, Docker varsayılan Seccomp profiliyle bunların 44 tanesini engeller (örn: reboot komutu). Özel bir JSON dosyasıyla uygulamanıza has bir Seccomp profili yazabilirsiniz:
+
   ```bash
   docker run --security-opt seccomp=/path/to/profile.json benim-imajim
   ```
 
-- **AppArmor & SELinux:** Belirli dosya yollarına (örn: `/etc/shadow`) erişimi çekirdek seviyesinde yasaklar. Docker'ın varsayılan `docker-default` AppArmor profili çok etkilidir. 
+- **AppArmor & SELinux:** Belirli dosya yollarına (örn: `/etc/shadow`) erişimi çekirdek seviyesinde yasaklar. Docker'ın varsayılan `docker-default` AppArmor profili çok etkilidir.
 
 ## 6. Dosya Sistemi Optimizasyonu (Read-Only)
 
 Eğer uygulamanız sadece okuma işlemi yapıyor ve diskteki dosyalarda kalıcı bir değişiklik yapmıyorsa, konteyneri salt-okunur (read-only) modda çalıştırın:
 
 ```bash
-docker run --read-only nginx
+# Nginx geçici dosya yazmaya ihtiyaç duyduğundan --tmpfs parametresi şarttır
+docker run --read-only --tmpfs /var/cache/nginx --tmpfs /var/run nginx
 ```
+
 Böylece hacker içeri sızsa bile sunucuya zararlı bir dosya indiremez veya var olan bir betiği (script) değiştiremez!
 
 ---

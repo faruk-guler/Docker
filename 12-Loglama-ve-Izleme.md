@@ -17,7 +17,8 @@ Bir konteyneri başlatırken `--log-driver` parametresiyle sürücüyü seçebil
 - **`awslogs`:** Logları doğrudan Amazon CloudWatch'a yazar.
 - **`splunk`:** Kurumsal log analitik platformu Splunk'a HTTP Event Collector üzerinden log gönderir.
 
-### Fluentd Örneği:
+### Fluentd Örneği
+
 ```bash
 docker run -d \
   --log-driver=fluentd \
@@ -32,21 +33,25 @@ Konteynerlerin o anki CPU, RAM ve Ağ tüketimini canlı görmek için `docker s
 
 **Gelişmiş Formatlama (Sadece İstediğiniz Verileri Çekmek İçin):**
 Eğer kendi monitoring script'inizi yazıyorsanız, ekranı temiz bir tablo olarak almak isteyebilirsiniz:
+
 ```bash
 docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
 ```
+
 *Bu komut, canlı akışı durdurur (`--no-stream`) ve sadece Konteyner Adı, CPU % ve RAM Kullanımı sütunlarını verir.*
 
 ## 3. "Hero" Seviyesi: Prometheus ve Grafana Stack
 
 `docker stats` sadece o anı gösterir, geçmişi (Dün gece saat 03:00'te CPU neden fırladı?) göstermez. Üretim (Production) ortamlarında geçmişe dönük izleme için endüstri standardı **cAdvisor + Prometheus + Grafana** üçlüsüdür.
 
-### İzleme (Monitoring) Mimarisi:
-1. **cAdvisor (Container Advisor):** Google tarafından geliştirilmiştir. Docker Daemon'a bağlanır ve her saniye tüm konteynerlerin CPU, RAM ve Disk I/O metriklerini okur.
+### İzleme (Monitoring) Mimarisi
+
+1. **cAdvisor (Container Advisor):** Google tarafından geliştirilmiştir. Docker Daemon'a bağlanır ve her saniye tüm konteynerlerin CPU, RAM ve Disk I/O metriklerini okur. *(Not: cAdvisor doğrudan host makinenin Linux çekirdek verilerini (/sys, /var/lib/docker vb.) okuduğu için native Linux hostlarda sorunsuz çalışır. Windows ve macOS hostlarda Docker Desktop'ın VM katmanından ötürü ek ayar gerektirebilir veya hata verebilir).*
 2. **Prometheus:** cAdvisor'dan bu metrikleri çeker ve kendi özel zaman serisi (Time-Series) veritabanında yıllarca saklar.
 3. **Grafana:** Prometheus'taki verileri okur ve devasa, harika görünümlü görsel grafiklere (Dashboard) dönüştürür.
 
-### Tek Tıkla Kurulum (`docker-compose.monitoring.yml`):
+### Tek Tıkla Kurulum (`docker-compose.monitoring.yml`)
+
 ```yaml
 # Güncel Compose versiyonlarında 'version' satırına gerek yoktur.
 
@@ -73,6 +78,7 @@ services:
     depends_on:
       - prometheus
 ```
+
 *(Bu dosyayı ayağa kaldırdığınızda `localhost:3000` adresinden Grafana'ya girip, uygulamanızın milisaniyelik tüm performans grafiklerini dev ekranlarda izleyebilirsiniz).*
 
 ---

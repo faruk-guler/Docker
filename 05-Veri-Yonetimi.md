@@ -8,7 +8,8 @@ Bir veritabanı (MySQL, PostgreSQL) çalıştırdığınızı düşünün; veril
 
 Volumes, doğrudan Docker tarafından yönetilen ve ana makinenin (host) diskinde özel bir alanda (`/var/lib/docker/volumes/` altında) saklanan veri alanlarıdır. Docker dışındaki süreçlerin (veya kullanıcıların) bu verilere müdahale etmesi zordur, bu yüzden en güvenli ve önerilen yöntemdir.
 
-### Volume Komutları:
+### Volume Komutları
+
 ```bash
 # Yeni bir volume oluşturmak
 docker volume create benim-veritabani-volumem
@@ -24,6 +25,7 @@ docker volume prune
 ```
 
 ### Volume'ü Konteynere Bağlamak
+
 ```bash
 docker run -d \
   --name mysql-db \
@@ -31,6 +33,7 @@ docker run -d \
   -v benim-veritabani-volumem:/var/lib/mysql \
   mysql:8.0
 ```
+
 Bu komutla, konteynerin içindeki `/var/lib/mysql` dizininde yapılan her değişiklik, güvenli bir şekilde `benim-veritabani-volumem` isimli volume'e yazılır. Konteyner silinse bile veri güvendedir.
 
 ---
@@ -41,27 +44,32 @@ Bind mount, host makinenizdeki spesifik bir klasörün veya dosyanın, konteyner
 
 Özellikle yazılım geliştirirken, bilgisayarınızda yazdığınız kodun anında konteynerin içine yansıması için (canlı kodlama / hot-reload) mükemmeldir.
 
-### Bind Mount Örneği:
+### Bind Mount Örneği
+
 ```bash
 docker run -d \
   --name web-app \
   -v $(pwd)/src:/usr/share/nginx/html \
   nginx:latest
 ```
+
 *Not:* `$(pwd)` komutu, bulunduğunuz dizini (print working directory) ifade eder. Windows PowerShell'de `${PWD}` kullanılır.
 
 ### Read-Only (Salt Okunur) Bind Mount
+
 Güvenlik açısından, konteynerin makinenizdeki dosyalara **sadece okuma** yetkisiyle erişmesini istiyorsanız `:ro` parametresini ekleyebilirsiniz:
+
 ```bash
 -v $(pwd)/ayarlar.json:/app/ayarlar.json:ro
 ```
+
 Bu sayede konteyner hacklense dahi, hacker host makinenizdeki o dosyayı değiştiremez.
 
 ---
 
 ## 3. tmpfs Mounts (RAM Üzerinde Geçici Veri)
 
-Çok az bilinen ama performans için kritik olan üçüncü yöntemdir. Eğer verinizin diske **hiç yazılmasını istemiyorsanız** (örneğin çok hassas şifreleme anahtarları (keys) tutuyorsanız veya inanılmaz hızlı I/O performansı gerektiren geçici cache veriniz varsa), veriyi sadece RAM üzerinde (tmpfs) tutabilirsiniz. Konteyner durduğunda veri anında yok olur.
+Çok az bilinen ama performans için kritik olan üçüncü yöntemdir. Eğer verinizin diske **hiç yazılmasını istemiyorsanız** (örneğin çok hassas şifreleme anahtarları (keys) tutuyorsanız veya inanılmaz hızlı I/O performansı gerektiren geçici cache veriniz varsa), veriyi sadece RAM üzerinde (tmpfs) tutabilirsiniz. Konteyner durduğunda veri anında yok olur. *(Not: tmpfs özelliği doğrudan Linux çekirdeğine aittir, Windows üzerinde yerel olarak çalışmaz. Windows'ta Docker Desktop kullanıldığında arka plandaki WSL2/Linux sanal makinesi üzerinde çalıştırılır).*
 
 ```bash
 docker run -d \
@@ -69,6 +77,7 @@ docker run -d \
   --tmpfs /app/cache:rw,size=256m \
   benim-imajim
 ```
+
 Bu komut, konteynerin `/app/cache` dizinini doğrudan makinenin RAM'ine bağlar (256MB limit ile).
 
 ---
@@ -76,23 +85,29 @@ Bu komut, konteynerin `/app/cache` dizinini doğrudan makinenin RAM'ine bağlar 
 ## İleri Seviye Veri Stratejileri
 
 ### A. Volume Backup (Yedekleme) ve Restore (Geri Yükleme)
+
 Bir volume'ü doğrudan host üzerinden yedeklemek zordur. Bunun yerine "geçici (rm)" bir konteyner kullanarak veriyi tar/zip arşivine dönüştürmek en profesyonel yöntemdir:
 
 **Yedek Alma (Backup):**
+
 ```bash
 docker run --rm \
   -v benim-veritabani-volumem:/veri-kaynagi \
   -v $(pwd):/yedek-hedefi \
   ubuntu tar cvf /yedek-hedefi/yedek_2026.tar /veri-kaynagi
 ```
+
 Bu komut geçici bir Ubuntu konteyneri açar, volume'ü ve bulunduğunuz klasörü içeri bağlar, verileri tar ile sıkıştırıp bilgisayarınıza `yedek_2026.tar` olarak bırakır ve kendini imha eder.
 
 ### B. İleri Seviye Volume Sürücüleri (Volume Drivers)
+
 Docker Volume'leri sadece yerel diskinizde durmak zorunda değildir. **Volume Plugins (Eklentiler)** sayesinde verilerinizi bambaşka sunucularda tutabilirsiniz:
+
 - **SSHFS/NFS Sürücüleri:** Konteyner verilerini uzak bir sunucuya (NFS veya SSH üzerinden) yazar.
 - **Cloud Sürücüleri:** Amazon EBS, Google Cloud Persistent Disk veya Azure Files üzerinden devasa bulut depolama alanlarını doğrudan bir Docker Volume gibi kullanabilirsiniz.
 
 **NFS Volume Örneği:**
+
 ```bash
 docker volume create --driver local \
   --opt type=nfs \
@@ -100,6 +115,7 @@ docker volume create --driver local \
   --opt device=:/path/to/nfs/share \
   nfs-volumem
 ```
+
 Bu sayede Swarm veya Kubernetes kullanmadan bile birden fazla sunucudaki konteynerlerin aynı paylaşımlı klasöre veri yazmasını sağlayabilirsiniz.
 
 ---

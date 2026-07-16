@@ -1,6 +1,6 @@
 # Bölüm 7: Docker Compose ve İleri Seviye Konfigürasyonlar
 
-Günümüzde hiçbir uygulama tek başına (sadece web sunucusu olarak) çalışmaz. Bir React frontend'i, bir Node.js backend'i, bir PostgreSQL veritabanı ve Redis cache'i aynı anda çalıştırmanız gerekebilir. 
+Günümüzde hiçbir uygulama tek başına (sadece web sunucusu olarak) çalışmaz. Bir React frontend'i, bir Node.js backend'i, bir PostgreSQL veritabanı ve Redis cache'i aynı anda çalıştırmanız gerekebilir.
 
 Tüm bunları tek tek `docker run ...` komutlarıyla ayağa kaldırmak, ağlara bağlamak ve volume'lerini ayarlamak bir kabusa dönüşür. **Docker Compose**, bu karmaşayı tek bir YAML dosyasıyla çözmenizi sağlayan resmi Docker aracıdır.
 
@@ -19,10 +19,13 @@ services:
 
   db:
     image: postgres:15
-    environment:
-      POSTGRES_PASSWORD: gizlisifre
+    # environment:
+    #   POSTGRES_PASSWORD: gizlisifre
+    env_file:
+      - .env # Şifreleri doğrudan buraya yazmak yerine .env dosyasından okur
 ```
-Bu dosyanın bulunduğu klasörde terminale sadece `docker compose up -d` yazmanız, yukarıdaki iki sistemi aynı ağda kurup bağlamaya yeterlidir. 
+
+Bu dosyanın bulunduğu klasörde terminale sadece `docker compose up -d` yazmanız, yukarıdaki iki sistemi aynı ağda kurup bağlamaya yeterlidir.
 *(Kapatmak için: `docker compose down`)*
 
 ---
@@ -32,7 +35,9 @@ Bu dosyanın bulunduğu klasörde terminale sadece `docker compose up -d` yazman
 "Zero to Hero" seviyesinde bir `docker-compose.yml` dosyası yazarken kullanabileceğiniz tüm güçlü parametreler şunlardır:
 
 ### A. Bağımlılıklar (Depends On)
-Bir servisin diğerinden önce başlamasını garanti eder. 
+
+Bir servisin diğerinden önce başlamasını garanti eder.
+
 ```yaml
 services:
   backend:
@@ -45,7 +50,9 @@ services:
 ```
 
 ### B. Sağlık Kontrolü (Healthcheck)
+
 Servisin gerçekten çalışıp çalışmadığını (sadece ayakta olup olmadığını değil, HTTP 200 dönüp dönmediğini) test eder.
+
 ```yaml
 services:
   db:
@@ -59,21 +66,26 @@ services:
 ```
 
 ### C. Profiller (Profiles)
+
 Bazı servisleri sadece geliştirme (dev) veya sadece test ortamında çalıştırmak isteyebilirsiniz.
+
 ```yaml
 services:
   frontend:
     image: react-app
     profiles: ["frontend", "dev"]
-    
+
   debug-tool:
     image: phpmyadmin
     profiles: ["debug"]
 ```
+
 *(Kullanımı: Sadece debug aracını başlatmak için: `docker compose --profile debug up`)*
 
 ### D. Restart Politikaları
+
 Konteyner çökerse ne olacağı:
+
 ```yaml
     restart: always           # Her durumda yeniden başlat
     # restart: on-failure     # Sadece hata koduyla kapanırsa başlat
@@ -81,7 +93,9 @@ Konteyner çökerse ne olacağı:
 ```
 
 ### E. Gizli Veriler ve Yapılandırmalar (Secrets & Configs)
+
 Şifreleri environment variable (çevresel değişken) olarak vermek yerine, Docker Secrets üzerinden RAM'e enjekte etmek en güvenli yoldur.
+
 ```yaml
 services:
   app:
@@ -101,7 +115,9 @@ configs:
 ```
 
 ### F. Kaynak Sınırlandırmaları (Deploy > Resources)
+
 Konteynerin kullanabileceği CPU ve RAM'i kısıtlamak için `deploy` anahtarı kullanılır (Özellikle Swarm mode ve v3 formatında).
+
 ```yaml
 services:
   agir-uygulama:
@@ -117,7 +133,9 @@ services:
 ```
 
 ### G. Build Parametreleri
+
 Sadece hazır imajları (image: nginx) kullanmak zorunda değilsiniz. Compose, sizin yerinize Dockerfile'ı build edebilir.
+
 ```yaml
 services:
   webapp:
@@ -134,15 +152,20 @@ services:
 ## 3. Komutlar ve Püf Noktaları
 
 - **Logları Takip Etmek:**
+
   ```bash
   docker compose logs -f --tail 100 webapp
   ```
+
 - **İmajları Yeniden Build Etmek:** Kodunuzu değiştirdiniz ama `up` yaptığınızda eski imaj çalışıyor. Yenisini inşa etmeye zorlamak için:
+
   ```bash
   docker compose up -d --build
   ```
+
 - **Farklı Dosya İsimleri:**
   Eğer dosya adınız `docker-compose.yml` değilse (örneğin `docker-compose.prod.yml`):
+
   ```bash
   docker compose -f docker-compose.prod.yml up -d
   ```

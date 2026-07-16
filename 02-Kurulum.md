@@ -4,17 +4,19 @@ Docker'ı bilgisayarınıza veya sunucunuza kurmak genellikle "İleri - İleri -
 
 ## 1. Windows Kurulumu ve WSL 2 Mimarisi
 
-Windows, yapısı gereği Linux tabanlı konteynerleri doğrudan çalıştıramaz. Eskiden bu sorun **Hyper-V** üzerinde tam bir sanal makine kurularak çözülüyordu. Ancak bu yöntem hantal ve yavaştı. 
-
+Windows, yapısı gereği Linux tabanlı konteynerleri doğrudan çalıştıramaz. Eskiden bu sorun **Hyper-V** üzerinde tam bir sanal makine kurularak çözülüyordu. Ancak bu yöntem hantal ve yavaştı.
 Günümüzde Docker, Windows üzerinde **WSL 2 (Windows Subsystem for Linux 2)** mimarisini kullanır.
 
 ### Kurulum Adımları
+
 1. [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/)'u indirin.
 2. Kurulum ekranında **"Use WSL 2 instead of Hyper-V"** seçeneğinin İŞARETLİ olduğundan emin olun (Önerilen).
 3. Bilgisayarı yeniden başlatın.
 
 ### WSL 2 Detayları
+
 WSL 2, Windows'un içine gömülü hafif bir gerçek Linux çekirdeğidir (Lightweight Utility VM). Docker Desktop kurulduğunda arka planda iki tane özel WSL dağıtımı (distro) oluşturur:
+
 - `docker-desktop`: Docker motorunun konfigürasyonlarını tutar.
 - `docker-desktop-data`: İndirdiğiniz imajların ve volumelerin bulunduğu devasa disktir (`ext4.vhdx` formatında).
 
@@ -25,10 +27,12 @@ WSL 2, Windows'un içine gömülü hafif bir gerçek Linux çekirdeğidir (Light
 macOS de (Unix tabanlı olmasına rağmen) Linux çekirdek özelliklerine (cgroups, namespaces) doğrudan sahip değildir. Bu nedenle Docker Desktop for Mac arka planda hafif bir Linux VM çalıştırır (Eskiden HyperKit, şimdi Apple'ın yerel Virtualization Framework'ünü kullanır).
 
 ### Kurulum
+
 1. [Docker Desktop for Mac](https://docs.docker.com/desktop/install/mac-install/)'i indirin (İşlemcinizin Intel mi yoksa Apple Silicon - M1/M2 mi olduğuna dikkat edin!).
 2. Kurun ve çalıştırın.
 
 ### Mac için Hafif ve Ücretsiz Alternatif: Colima
+
 Docker Desktop şirketler için belirli bir ölçeğin üzerinde ücretlidir ve bazen çok RAM tüketir. Mac üzerinde harika bir alternatif **Colima**'dır.
 
 ```bash
@@ -38,6 +42,7 @@ brew install colima docker docker-compose
 # Arka planda Docker Daemon'u başlat (2 CPU, 4GB RAM ile)
 colima start --cpu 2 --memory 4
 ```
+
 Colima, komut satırı üzerinden Docker'ı sanki native (doğal) olarak çalışıyormuş gibi kullanmanızı sağlar ve çok daha hafiftir.
 
 ## 3. Linux (Ubuntu/Debian) Kurulumu - Native Ortam
@@ -53,6 +58,7 @@ sudo sh get-docker.sh
 ```
 
 ### Kurulum Sonrası Kritik Güvenlik Ayarı: Root Olmadan Kullanım
+
 Linux'ta `docker` komutları varsayılan olarak sadece `root` (veya `sudo`) yetkisiyle çalışır. Her seferinde `sudo docker...` yazmamak ve güvenliği sağlamak için kendi kullanıcınızı `docker` grubuna eklemelisiniz:
 
 ```bash
@@ -71,7 +77,7 @@ Docker Sunucusunun (Daemon) beyni `/etc/docker/daemon.json` dosyasıdır (Window
 
 Varsayılan olarak bu dosya boştur. Ancak performansı, güvenliği veya ağ ayarlarını özelleştirmek için buraya çok kritik JSON anahtarları eklenebilir.
 
-### Kapsamlı Bir `daemon.json` Örneği ve Tüm Önemli Parametreler:
+### Kapsamlı Bir `daemon.json` Örneği ve Tüm Önemli Parametreler
 
 ```json
 {
@@ -88,7 +94,7 @@ Varsayılan olarak bu dosya boştur. Ancak performansı, güvenliği veya ağ ay
   ],
   "insecure-registries": ["myregistry.local:5000"],
   "registry-mirrors": ["https://mirror.gcr.io"],
-  "bip": "192.168.1.5/24",
+  "bip": "192.168.1.1/24",
   "mtu": 1440,
   "storage-driver": "overlay2",
   "max-concurrent-downloads": 5,
@@ -98,7 +104,8 @@ Varsayılan olarak bu dosya boştur. Ancak performansı, güvenliği veya ağ ay
 }
 ```
 
-### Parametrelerin Anlamları:
+### Parametrelerin Anlamları
+
 - **`log-driver` ve `log-opts`**: Docker konteyner logları diskte sonsuza kadar büyüyüp diski doldurmasın diye log rotasyonu (Rotation) yapar. Yukarıdaki örnekte: "Her bir log dosyası maksimum 50MB olsun ve en fazla 3 tane eski dosyayı tut, sonrasını sil" diyoruz. (Hayat kurtarır!)
 - **`default-address-pools`**: Yeni Docker network'leri oluşturduğunuzda Docker rastgele IP blokları dağıtır (örn: 172.17.x.x). Eğer bu IP blokları şirket ağınızdaki VPN veya veritabanı IP'leri ile çakışıyorsa, Docker'ın kullanacağı havuzu buradan değiştirmelisiniz.
 - **`insecure-registries`**: HTTPS sertifikası (SSL) olmayan özel depo adreslerinize bağlanmanızı sağlar (Bölüm 15'te değineceğiz).

@@ -1,12 +1,13 @@
 # Bölüm 11: CI/CD Süreçlerine İleri Seviye Entegrasyon
 
-Kodumuzu kendi bilgisayarımızda `docker build` komutuyla imaja dönüştürmeyi öğrendik. Ancak profesyonel iş dünyasında bu işlem **asla manuel** yapılmaz. 
+Kodumuzu kendi bilgisayarımızda `docker build` komutuyla imaja dönüştürmeyi öğrendik. Ancak profesyonel iş dünyasında bu işlem **asla manuel** yapılmaz.
 
 Siz kodunuzu GitHub'a veya GitLab'a gönderdiğiniz (push) anda; sunuculardaki sistemlerin bu yeni kodu alıp, Docker imajını otomatik olarak derlemesi, güvenlik testlerinden geçirmesi ve yayınlaması beklenir. İşte bu sürece **CI/CD (Continuous Integration / Continuous Deployment)** adı verilir.
 
 ## 1. CI/CD'nin Docker İçin Aşamaları (Pipelines)
 
 Standart bir Docker CI/CD boru hattı (pipeline) şu aşamalardan (stages) oluşur:
+
 1. **Lint & Test:** Dockerfile'ın sözdizimi kontrol edilir (Örn: `hadolint` aracı ile) ve kodun Unit testleri çalıştırılır.
 2. **Build:** `docker build` komutuyla imaj derlenir.
 3. **Security Scan:** İmaj içindeki zafiyetler (Trivy/Snyk) taranır. (Bölüm 14'te detaylandırılacaktır).
@@ -34,7 +35,7 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
-    
+
     # 1. Kaynak Kodu Çek
     - name: Checkout Code
       uses: actions/checkout@v3
@@ -61,7 +62,27 @@ jobs:
       with:
         images: kullaniciadim/benim-appim
 
-    # 6. İnşa Et ve Gönder (Multi-Arch)
+    # 6. Test Amaçlı İmajı Lokal Olarak İnşa Et (Docker Daemon'a Yükle)
+    - name: Build local for scan
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        load: true
+        tags: kullaniciadim/benim-appim:local
+        cache-from: type=registry,ref=kullaniciadim/benim-appim:buildcache
+
+    # 7. İmaj Güvenlik Taraması (Trivy)
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'kullaniciadim/benim-appim:local'
+        format: 'table'
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'CRITICAL,HIGH'
+
+    # 8. Başarılıysa Asıl İmajı İnşa Et ve Gönder (Multi-Arch)
     - name: Build and push
       uses: docker/build-push-action@v4
       with:
@@ -74,7 +95,8 @@ jobs:
         cache-to: type=registry,ref=kullaniciadim/benim-appim:buildcache,mode=max
 ```
 
-### Bu Pipeline'ın "Hero" Özellikleri:
+### Bu Pipeline'ın "Hero" Özellikleri
+
 - **Multi-Architecture Build:** `platforms: linux/amd64,linux/arm64` satırı sayesinde bu imaj hem standart sunucularda (Intel/AMD) hem de Apple Silicon / AWS Graviton (ARM) işlemcilerde kusursuz çalışır!
 - **Build Cache (Önbellek):** `cache-from` ve `cache-to` satırları, bir sonraki build işleminin baştan başlamasını engeller ve süreyi 10 dakikadan 30 saniyeye düşürür. Cache, doğrudan Docker Registry üzerinde tutulur.
 

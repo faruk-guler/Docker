@@ -6,24 +6,37 @@ Docker'da her şey komut satırından (CLI) başlar. Bir `docker run` komutu yaz
 
 `docker run`, Docker evreninin en çok kullanılan komutudur. Arka planda aslında iki işlemi birleştirir: `docker create` (konteyneri oluşturur) ve `docker start` (konteyneri başlatır).
 
-### En Kapsamlı `docker run` Örneği:
+### Örnek 1: Kalıcı Veri (Stateful) Veritabanı Konteyneri
+
 ```bash
 docker run -d \
   --name veritabani \
-  -p 8080:80 \
-  -v benim-volumem:/data \
+  -p 3306:3306 \
+  -v benim-volumem:/var/lib/mysql \
   -e MYSQL_ROOT_PASSWORD=gizlisifre \
   --network benim-agim \
   --restart always \
-  --memory="512m" \
+  --memory="1g" \
   --cpus="1.5" \
-  --user 1000:1000 \
+  --user 999:999 \
+  mysql:8.0
+```
+
+### Örnek 2: Geçici ve Salt-Okunur (Stateless) Web Konteyneri
+
+```bash
+docker run -d \
+  --name web-test \
+  -p 8080:80 \
   --read-only \
+  --tmpfs /var/cache/nginx \
+  --tmpfs /var/run \
   --rm \
   nginx:latest
 ```
 
-### Parametrelerin (Flag) Eksiksiz Listesi:
+### Parametrelerin (Flag) Eksiksiz Listesi
+
 - `-d` veya `--detach`: Konteyneri arka planda (sessizce) çalıştırır. Terminalinizi kilitlenmekten kurtarır.
 - `-it`: Interactive ve TTY (Terminal) anlamına gelir. Konteynerin içine komut satırından bağlanmanızı (shell almanızı) sağlar. Genellikle `-it` şeklinde birleşik yazılır.
 - `--name <isim>`: Konteynerinize rastgele bir isim (örn: *jovial_einstein*) verilmesi yerine sizin belirlediğiniz ismi atar. Konteynerleri yönetmek için şarttır.
@@ -50,7 +63,8 @@ Host makinenizde o an nelerin çalıştığını görmek için kullanılır.
 docker ps
 ```
 
-### Parametreler:
+### "docker ps" Parametreleri
+
 - `-a` veya `--all`: Sadece çalışanları değil, durdurulmuş (çökmüş veya işi bitmiş) tüm konteynerleri gösterir.
 - `-q` veya `--quiet`: Ekrana sadece konteyner ID'lerini basar. (Özellikle toplu silme komutlarında çok işe yarar: `docker rm -f $(docker ps -aq)`).
 - `-s` veya `--size`: Ekrana fazladan bir sütun ekleyerek konteynerlerin diskte ne kadar boyut kapladığını gösterir.
@@ -67,7 +81,8 @@ Halihazırda çalışan bir konteynerin içine "dışarıdan" yeni bir süreç b
 docker exec -it web-sunucu /bin/sh
 ```
 
-### Parametreler:
+### "docker exec" Parametreleri
+
 - `-it`: Etkileşimli bir terminal açar.
 - `-u` veya `--user`: İçeriye root olarak değil, farklı bir kullanıcı olarak (örn: `-u postgres`) bağlanmanızı sağlar.
 - `-e`: Sadece o anki exec süreci için geçerli olacak yeni ortam değişkenleri tanımlar.
@@ -79,17 +94,21 @@ docker exec -it web-sunucu /bin/sh
 
 Bir süre sonra Docker makineniz kullanılmayan imajlar ve durmuş konteynerlerle çöplüğe dönebilir.
 
-### Silme Komutları:
+### Silme Komutları
+
 - `docker rm <konteyner_id>`: Durdurulmuş bir konteyneri siler.
 - `docker rm -f <konteyner_id>`: Çalışan bir konteyneri **zorla (force)** durdurup siler.
 - `docker rmi <imaj_id>`: İndirilmiş bir imajı siler.
 - `docker image prune`: İsmi veya etiketi olmayan (dangling) eski imajları temizler.
 
 ### Nihai Temizlik Silahı: `docker system prune`
+
 Mevcut disk alanınızı geri kazanmak için en çok kullanacağınız komuttur:
+
 ```bash
 docker system prune -a --volumes
 ```
+
 *(Bu komut kullanılmayan tüm imajları, durdurulmuş konteynerleri, kullanılmayan ağları ve boştaki volume'leri tek kalemde tamamen siler. Production ortamlarında dikkatli olunmalıdır!)*
 
 ---

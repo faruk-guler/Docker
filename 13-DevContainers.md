@@ -14,7 +14,7 @@ DevContainer kullanmak için projenizin ana dizininde `.devcontainer` adında bi
 {
   "name": "Node.js & TypeScript Kurumsal Ortam",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:18",
-  
+
   // 1. Özellikler (Features): İmaja hazır paketler ekler (Sıfırdan Dockerfile yazmaya gerek kalmaz)
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
@@ -68,12 +68,15 @@ DevContainer kullanmak için projenizin ana dizininde `.devcontainer` adında bi
 ## 2. Özelliklerin İncelenmesi (Deep Dive)
 
 ### A. Özellikler (Features)
+
 Eskiden konteyner içine AWS CLI, GitHub CLI veya Terraform kurmak için devasa Dockerfile'lar yazardık. Şimdi `features` anahtarı ile Microsoft'un ve topluluğun hazırladığı binlerce hazır paketi sadece ismini yazarak projemize çekebiliyoruz.
 
 ### B. VS Code Özelleştirmeleri (Customizations)
+
 Takımdaki bir kişi ESlint kullanırken diğeri kullanmıyorsa kodlar çakışır. `customizations > extensions` alanı sayesinde, bu projeyi açan herkesin VS Code'una **otomatik olarak** ESlint, Prettier ve GitLens gibi eklentiler yüklenir. İşe yeni başlayan biri için kusursuz bir deneyimdir!
 
 ### C. Yaşam Döngüsü Betikleri (Lifecycle Scripts)
+
 Geliştirme ortamı açılmadan önce bazı veritabanı migration'ları çalıştırmak veya paket yüklemek (npm install) isteyebilirsiniz. `postCreateCommand` veya `updateContentCommand` tam olarak bu işe yarar.
 
 ## 3. DevContainers ile Docker Compose Kullanımı
@@ -88,6 +91,7 @@ Uygulamanız sadece Node.js'ten oluşmuyor; bir de PostgreSQL ve Redis'e ihtiya�
   "workspaceFolder": "/workspace"
 }
 ```
+
 Bu konfigürasyonla VS Code açıldığında, arka planda otomatik olarak `docker compose up` çalışır, veritabanları ayağa kalkar ve siz uygulamanızın ("app") içine girip kod yazmaya başlarsınız.
 
 ---

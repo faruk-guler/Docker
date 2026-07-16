@@ -8,9 +8,10 @@ Bu bölümde 2 farklı tam teşekküllü mimariyi inceleyeceğiz: Multi-Stage Fr
 
 Modern Frontend projelerinde kaynak kodunuz binlerce dosya ve megabaytlarca `node_modules` içerir. Ancak canlı sunucuda bunların hiçbirine ihtiyacınız yoktur; tek ihtiyacınız olan derlenmiş (build edilmiş) saf HTML, CSS ve JS dosyalarıdır.
 
-Bu yüzden "Multi-Stage Build" kullanırız. 
+Bu yüzden "Multi-Stage Build" kullanırız.
 
 ### `Dockerfile.prod`
+
 ```dockerfile
 # --- BİRİNCİ AŞAMA: BUILDER (Derleyici) ---
 FROM node:18-alpine AS builder
@@ -22,7 +23,7 @@ RUN npm ci
 
 COPY . .
 # Kaynak koddan optimize edilmiş static dosyaları üretir (genelde /app/build veya /app/dist klasörü)
-RUN npm run build 
+RUN npm run build
 
 # --- İKİNCİ AŞAMA: RUNNER (Sunucu) ---
 # Üretime (Production) gidecek olan asıl ince imaj
@@ -35,6 +36,7 @@ WORKDIR /usr/share/nginx/html
 RUN rm -rf ./*
 
 # BİRİNCİ aşamadan sadece derlenmiş klasörü alıp buraya kopyala (Kalan her şeyi çöpe at!)
+# (Not: Create React App yerine Vite kullanıyorsanız '/app/build' yerine '/app/dist' yazmalısınız)
 COPY --from=builder /app/build .
 
 # İsteğe bağlı: Nginx için özel konfigürasyonunuz varsa kopyalayın
@@ -43,13 +45,14 @@ COPY --from=builder /app/build .
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 ```
+
 *Sonuç:* Belki de 1GB sürecek olan bir Node.js imajı yerine, sadece 20MB'lık ve içinde sadece saf statik dosyaları barındıran inanılmaz hızlı ve güvenli bir imaj elde edersiniz.
 
 ---
 
 ## Proje 2: Reverse Proxy (Ters Vekil) ve Mikroservis Mimarisi
 
-Büyük projelerde tek bir sunucuda hem React Frontend, hem Node.js API, hem Python API çalışabilir. Dışarıdan gelen `app.com/api` isteklerinin Node.js'e, `app.com/ai` isteklerinin Python'a, kalan isteklerin ise React'a gitmesi gerekir. 
+Büyük projelerde tek bir sunucuda hem React Frontend, hem Node.js API, hem Python API çalışabilir. Dışarıdan gelen `app.com/api` isteklerinin Node.js'e, `app.com/ai` isteklerinin Python'a, kalan isteklerin ise React'a gitmesi gerekir.
 
 Bunu bir **Ters Vekil (Reverse Proxy)** ile çözeriz. Sektörde bunun için genellikle **Nginx** veya **Traefik** kullanılır.
 
@@ -66,7 +69,8 @@ services:
       - "80:80"
       - "443:443" # SSL/TLS Sertifikaları proxy üzerinde tutulur
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # Nginx'in ana ayarlarını ezmek yerine default.conf yönlendirmelerini ezmek daha temizdir
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./ssl-certs:/etc/ssl/certs:ro
     networks:
       - public_net
@@ -120,7 +124,8 @@ secrets:
     file: ./secrets/db_password.txt
 ```
 
-### Bu Mimarinin "Hero" Özellikleri:
+### Bu Mimarinin "Hero" Özellikleri
+
 1. **İç Ağ Güvenliği (Internal Network):** `private_db_net` ağı `internal: true` olarak işaretlenmiştir. Bu ağdaki veritabanı, internetten gelen hiçbir paketi alamaz ve internete veri gönderemez. Dünyanın en güvenli veritabanıdır. Sadece `backend-api` ona erişebilir.
 2. **Reverse Proxy İzolasyonu:** Frontend ve Backend konteynerleri dışarıya port açmaz (`ports: - "3000:3000"` gibi bir satır YOKTUR). Bütün trafik `reverse-proxy` (Nginx) üzerinden geçer. Nginx bu trafiği süzer, SSL sertifikasını çözer ve güvenli paketleri ilgili konteynere iletir.
 3. **Secrets Kullanımı:** Veritabanı şifresi compose dosyasına metin olarak (plaintext) yazılmamış, dışarıdaki bir dosyadan Docker Secrets ile içeri enjekte edilmiştir.

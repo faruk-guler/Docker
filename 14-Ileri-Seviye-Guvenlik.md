@@ -9,6 +9,7 @@ Bölüm 9'da konteynerleri çalışırken (Runtime) nasıl koruyacağımızı (R
 Sektörde Docker imajlarını taramak için en çok kullanılan iki güçlü araç vardır: **Trivy** (Açık kaynaklı ve çok hızlı) ve **Snyk** (Kurumsal ve geliştirici odaklı).
 
 ### Trivy Kullanımı
+
 Trivy, imajın içindeki işletim sistemi paketlerini (apt, apk, yum) ve uygulama bağımlılıklarını (npm, pip, pom) tarar ve bilinen CVE (Ortak Güvenlik Açıkları) veritabanıyla karşılaştırır.
 
 ```bash
@@ -16,10 +17,12 @@ Trivy, imajın içindeki işletim sistemi paketlerini (apt, apk, yum) ve uygulam
 trivy image --severity HIGH,CRITICAL benim-imajim:latest
 ```
 
-### Docker'ın İçindeki Gömülü Tarayıcı
-Docker Desktop kullanıyorsanız veya `docker scan` eklentisi yüklüyse, Docker arka planda Snyk motorunu kullanarak imajınızı tarayabilir:
+### Docker'ın İçindeki Gömülü Tarayıcı (Docker Scout)
+
+Eskiden Snyk altyapısıyla çalışan `docker scan` komutu kullanımdan kaldırılmıştır (deprecated). Artık Docker'ın kendi yerleşik güvenlik aracı olan **Docker Scout** kullanılmaktadır:
+
 ```bash
-docker scan benim-imajim:latest
+docker scout cves benim-imajim:latest
 ```
 
 ## 2. SBOM (Software Bill of Materials) Nedir?
@@ -32,16 +35,19 @@ Tıpkı marketten aldığınız bir kekin arkasındaki içindekiler (şeker, un,
 # Trivy ile imajın SBOM belgesini (SPDX veya CycloneDX formatında) üretme
 trivy image --format spdx-json --output sbom.json benim-imajim:latest
 ```
+
 Bu `sbom.json` dosyasını CI/CD süreçlerinizde arşive kaydederek, kurumunuzun yasal uyumluluk (Compliance) şartlarını yerine getirmiş olursunuz.
 
 ## 3. İleri Seviye: Policy (Kural) Yazımı ve Zafiyetleri Yoksayma
 
-Bazen tarama araçları bir zafiyet bulur ama siz o paketi projenizde hiç kullanmıyorsunuzdur (False Positive) veya yamanın çıkmasına daha aylar vardır. CI/CD boru hattınızın bu yüzden durmasını (fail olmasını) istemezsiniz. 
+Bazen tarama araçları bir zafiyet bulur ama siz o paketi projenizde hiç kullanmıyorsunuzdur (False Positive) veya yamanın çıkmasına daha aylar vardır. CI/CD boru hattınızın bu yüzden durmasını (fail olmasını) istemezsiniz.
 
 Bu durumda **Ignore (Yoksayma)** kuralları veya **Güvenlik Politikaları (Security Policies)** yazarız.
 
 ### Trivy İçin `.trivyignore` Dosyası
+
 Projenizin ana dizinine `.trivyignore` adında bir dosya açıp, yoksaymak istediğiniz CVE (hata) kodlarını yazabilirsiniz:
+
 ```text
 # Bu zafiyet sadece Windows'u etkiliyor, biz Alpine Linux kullanıyoruz, yoksay.
 CVE-2021-34527
@@ -49,9 +55,11 @@ CVE-2021-34527
 # Bu paketi sildiğimiz için hata asılsız
 CVE-2022-12345
 ```
+
 Trivy tarama yaparken bu dosyadaki ID'leri görünce görmezden gelir ve CI/CD pipeline'ınız yeşil yanarak (başarılı) devam eder.
 
 ### OPA (Open Policy Agent) ve Rego ile Kural Yazımı
+
 Daha büyük şirketlerde kurallar kod olarak yazılır (Policy as Code). Trivy, **Rego** diliyle yazılmış OPA kurallarını destekler.
 
 Örneğin: *"İmajın içinde root kullanıcısına izin veriliyorsa veya imaj `ubuntu:18.04` tabanlıysa build işlemini DURDUR"* gibi gelişmiş mantıksal kurallar yazabilir ve tarama aracına entegre edebilirsiniz.
