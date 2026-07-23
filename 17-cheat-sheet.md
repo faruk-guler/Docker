@@ -1,18 +1,3 @@
----
-title: Docker Hızlı Referans (Cheat Sheet)
-date: 2026-07-14
-background: bg-[#488fdf]
-tags:
-  - container
-  - virtual
-categories:
-  - Programming
-intro: |
-  Bu belge [Docker](https://docs.docker.com/get-started/) için hızlı bir başvuru kaynağıdır (Cheat Sheet). En sık kullanılan Docker komutlarını burada bulabilirsiniz.
-plugins:
-  - copyCode
----
-
 ## Başlangıç
 
 ### İlk Adımlar
