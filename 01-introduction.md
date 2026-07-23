@@ -93,4 +93,16 @@ Docker, İstemci-Sunucu (Client-Server) mimarisine dayanır.
 - **Dockerfile:** Bir Docker imajının nasıl inşa edileceğini sıfırdan anlatan komut listesi / metin belgesidir. (İmajın kaynak kodudur).
 
 ---
+
+## Docker Alternatifleri: Podman ve nerdctl
+
+Docker tek seçenek değildir. Konteyner ekosistemi büyüdükçe alternatif araçlar da ortaya çıkmıştır:
+
+- **Podman:** Red Hat tarafından geliştirilen, Docker CLI ile neredeyse birebir uyumlu (`alias docker=podman`) bir konteyner motorudur. En büyük farkı **daemon'suz (daemonless)** çalışmasıdır; arka planda sürekli çalışan bir servis gerektirmez. Ayrıca varsayılan olarak **rootless** (root yetkisi gerektirmeyen) modda çalışır, bu da güvenlik açısından avantaj sağlar.
+- **nerdctl:** containerd projesinin CLI aracıdır. Docker komutlarıyla uyumlu olup Kubernetes'in arka planında kullandığı `containerd` runtime'ını doğrudan yönetir. Özellikle Kubernetes ekosistemiyle çalışan DevOps mühendisleri için tercih edilir.
+
+> [!TIP]
+> Bu kitap boyunca öğreneceğiniz tüm kavramlar (imaj, konteyner, volume, network, Dockerfile) bu alternatiflerde de aynıdır. Docker'ı öğrenmek, tüm konteyner dünyasını öğrenmek demektir.
+
+---
 *Giriş bölümüyle Docker'ın yüzeyini ve arka plandaki derin Kernel yeteneklerini (Namespaces, Cgroups) öğrendik. Sıradaki bölümde, Docker'ı farklı işletim sistemlerine nasıl kuracağımızı ve Daemon konfigürasyonlarını (Advanced Setup) inceleyeceğiz.*

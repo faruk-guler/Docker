@@ -128,7 +128,7 @@ secrets:
 
 1. **İç Ağ Güvenliği (Internal Network):** `private_db_net` ağı `internal: true` olarak işaretlenmiştir. Bu ağdaki veritabanı, internetten gelen hiçbir paketi alamaz ve internete veri gönderemez. Dünyanın en güvenli veritabanıdır. Sadece `backend-api` ona erişebilir.
 2. **Reverse Proxy İzolasyonu:** Frontend ve Backend konteynerleri dışarıya port açmaz (`ports: - "3000:3000"` gibi bir satır YOKTUR). Bütün trafik `reverse-proxy` (Nginx) üzerinden geçer. Nginx bu trafiği süzer, SSL sertifikasını çözer ve güvenli paketleri ilgili konteynere iletir.
-3. **Secrets Kullanımı:** Veritabanı şifresi compose dosyasına metin olarak (plaintext) yazılmamış, dışarıdaki bir dosyadan Docker Secrets ile içeri enjekte edilmiştir.
+3. **Secrets Kullanımı:** Veritabanı şifresi Compose veya imaj dosyasına açık metin (plaintext) olarak yazılmamış, harici dosyadan Docker Secrets yöntemiyle konteynere (/run/secrets/db_pass) güvenle iletilmiştir.
 
 ---
 *Gördüğünüz gibi Docker'ı temel seviyede bilmek sadece uygulamayı çalıştırmaktır. "Hero" seviyesinde bilmek ise o uygulamanın nefes aldığı ağı, veritabanını ve proxy'i kusursuz bir mimariyle örebilmektir.*

@@ -107,7 +107,7 @@ services:
 
 secrets:
   db_password:
-    file: ./secrets/db_password.txt # Bu dosyanın içindeki metni konteynere şifreli iletir
+    file: ./secrets/db_password.txt # Dosyayı konteyner içine (/run/secrets/db_password) emniyetle bağlar (Swarm ortamında şifreli iletilir)
 
 configs:
   my_config:
@@ -171,4 +171,43 @@ services:
   ```
 
 ---
+
+## 4. Compose Watch: Canlı Dosya Senkronizasyonu (Hot-Reload)
+
+Docker Compose v2.22+ ile gelen `develop.watch` özelliği, kaynak kodunuzda yaptığınız değişiklikleri anında çalışan konteynere senkronize eder. Bind mount'a alternatif olarak daha kontrollü ve performanslı bir canlı geliştirme deneyimi sunar.
+
+```yaml
+services:
+  webapp:
+    build: .
+    ports:
+      - "3000:3000"
+    develop:
+      watch:
+        # Kaynak kodlar değişince dosyaları konteynere senkronize et (rebuild gerektirmez)
+        - action: sync
+          path: ./src
+          target: /app/src
+
+        # package.json değişirse konteyneri yeniden build et ve başlat
+        - action: rebuild
+          path: ./package.json
+```
+
+### Watch Aksiyonları
+
+- **`sync`**: Dosya değişikliğini anında konteynere kopyalar (hot-reload için idealdir).
+- **`rebuild`**: Belirtilen dosya değiştiğinde konteyneri sıfırdan yeniden build edip başlatır (bağımlılık değişikliklerinde).
+- **`sync+restart`**: Dosyayı senkronize ettikten sonra konteyneri yeniden başlatır (config dosyası değişikliklerinde).
+
+```bash
+# Watch modunu başlatmak için
+docker compose watch
+```
+
+> [!TIP]
+> `docker compose watch` sayesinde `volumes: - ./src:/app/src` gibi bind mount'lara gerek kalmaz. Özellikle macOS ve Windows'ta bind mount'ların neden olduğu yavaş dosya sistemi performansından kurtulmuş olursunuz.
+
+---
 *Compose sayesinde yüzlerce konteyneri tek dosyada yönettik. Ancak bu konteynerler hep **tek bir makinede (sizin laptop'ınızda veya tek bir sunucuda)** çalışıyor. Peki ya yükler artarsa ve 10 farklı sunucudan oluşan bir kümeye (cluster) ihtiyaç duyarsak? Sıradaki bölüm: Docker Swarm.*
+

@@ -66,7 +66,7 @@ docker ps
 ### "docker ps" Parametreleri
 
 - `-a` veya `--all`: Sadece çalışanları değil, durdurulmuş (çökmüş veya işi bitmiş) tüm konteynerleri gösterir.
-- `-q` veya `--quiet`: Ekrana sadece konteyner ID'lerini basar. (Özellikle toplu silme komutlarında çok işe yarar: `docker rm -f $(docker ps -aq)`).
+- `-q` veya `--quiet`: Ekrana sadece konteyner ID'lerini basar. (Özellikle toplu silme komutlarında çok işe yarar: `docker rm -f $(docker ps -aq)` - *Not: Konteyner bulunmadığında argüman hatası vermemesi için `docker system prune` veya `docker rm -f $(docker ps -aq 2>/dev/null)` kullanımı önerilir*).
 - `-s` veya `--size`: Ekrana fazladan bir sütun ekleyerek konteynerlerin diskte ne kadar boyut kapladığını gösterir.
 - `--format`: Çıktıyı JSON veya belirli bir Go şablonuna göre formatlamanızı sağlar.
 

@@ -112,7 +112,7 @@ Varsayılan olarak bu dosya boştur. Ancak performansı, güvenliği veya ağ ay
 - **`registry-mirrors`**: Docker Hub'a bağlanırken hız kazanmak (veya limitlere takılmamak) için Google'ın ayna (mirror) sunucularını kullanmanızı sağlar.
 - **`bip` (Bridge IP):** Ana `docker0` bridge ağının sabit IP bloğunu belirler.
 - **`mtu`**: Ağ paketlerinin maksimum boyutunu ayarlar. Kötü ağ yapılandırmalarında paket düşmelerini engeller.
-- **`storage-driver`**: İmajların diske yazılma biçimidir. Genelde Linux için `overlay2`, Windows/Mac için `vfs` veya özel driver'lar seçilir.
+- **`storage-driver`**: İmajların diske yazılma biçimidir. Modern sistemlerde (Linux, Windows WSL2 ve macOS VM dahil) standart ve önerilen varsayılan `overlay2`'dir. (`vfs` ise performans ve disk kullanımı açısından son çare/test sürücüsüdür).
 - **`max-concurrent-downloads`**: `docker pull` yaparken aynı anda indirilecek maksimum katman (layer) sayısıdır. Bant genişliğini sınırlandırmak için kullanılır.
 - **`metrics-addr`**: Prometheus gibi monitoring araçlarının Docker'ın iç metriklerini (CPU, RAM vb.) okuması için dışarıya bir port açar.
 - **`experimental`**: Docker'ın henüz test aşamasındaki (yeni çıkan) komut setlerini kullanıma açar.

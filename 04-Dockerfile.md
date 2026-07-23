@@ -37,7 +37,7 @@ Kitabımızda tamlık sağlaması açısından yukarıdakilere ek olarak şu iki
   > **Önemli:** `ENTRYPOINT` ve `CMD` sıklıkla birlikte kullanılır. Ana uygulama `ENTRYPOINT`'e yazılır, ona gidecek varsayılan parametreler `CMD`'ye yazılır. Örneğin:
   > `ENTRYPOINT ["ping"]`
   > `CMD ["-c", "3", "8.8.8.8"]`
-- **`STOPSIGNAL`**: Konteynerin durdurulması istendiğinde uygulamanıza gönderilecek sistem kapatma sinyalini belirler. Örneğin: `STOPSIGNAL SIGKILL`
+- **`STOPSIGNAL`**: Konteynerin durdurulması istendiğinde uygulamanıza gönderilecek sistem kapatma sinyalini belirler (Zorla kapatan `SIGKILL` yerine uygulamanın temiz kapanmasını sağlayan `SIGTERM` veya `SIGQUIT` önerilir). Örneğin: `STOPSIGNAL SIGTERM`
 
 ---
 
@@ -123,7 +123,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o myapp main.go
 
 # İKİNCİ AŞAMA: NİHAİ İMAJ (Çalıştırıcı)
-# Çok hafif boş bir imaj kullanıyoruz
+# Çok hafif minimal bir Linux imajı kullanıyoruz (Tamamen boş imaj için 'scratch' de tercih edilebilir)
 FROM alpine:latest
 WORKDIR /app
 # Birinci aşamadaki (builder) derlenmiş dosyayı kopyalıyoruz
@@ -132,6 +132,59 @@ CMD ["./myapp"]
 ```
 
 Bu yöntem sayesinde, içinde koca bir Go dili derleyicisi barındıran 800MB'lık bir imaj yerine, sadece derlenmiş programı barındıran 10MB'lık bir imaj elde edersiniz!
+
+---
+
+## BuildKit ile Gelişmiş Önbellekleme (`RUN --mount`)
+
+Docker BuildKit, modern Dockerfile'larda devrim yaratan önbellekleme (cache) özelliği sunar. `npm install` veya `pip install` gibi paket yükleme komutları her build'de aynı paketleri tekrar tekrar internetten indirmek zorunda kalır. BuildKit'in `--mount=type=cache` özelliği bu sorunu ortadan kaldırır:
+
+```dockerfile
+# syntax=docker/dockerfile:1
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+
+# BuildKit cache mount: npm paketi indirme klasörünü build'ler arasında önbellekte tutar
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --prefer-offline
+
+COPY . .
+CMD ["node", "app.js"]
+```
+
+Bu sayede ilk build'de indirilen paketler bellekte tutulur ve sonraki build'lerde tekrar indirilmez. Build süresi dakikalardan saniyelere düşebilir!
+
+### Gizli Verileri Build Sırasında Güvenle Kullanmak (`--mount=type=secret`)
+
+Eğer build sırasında bir API anahtarı veya özel bir npm token'ına ihtiyaç duyuyorsanız, bunu `ENV` veya `ARG` ile imaja yazmak **güvenlik açığıdır** (imaj katmanlarında kalır). Bunun yerine:
+
+```dockerfile
+# Gizli dosyayı sadece bu RUN komutu süresince (/run/secrets/my_token) göster, imaja yazma
+RUN --mount=type=secret,id=my_token \
+    NPM_TOKEN=$(cat /run/secrets/my_token) npm ci
+```
+
+```bash
+# Build sırasında token'ı dışarıdan enjekte etme
+docker build --secret id=my_token,src=./my_secret_token.txt -t my-app .
+```
+
+> [!TIP]
+> BuildKit'i aktifleştirmek için: `DOCKER_BUILDKIT=1 docker build ...` veya Docker Desktop ayarlarından "BuildKit" seçeneğini açın. Docker 23.0+ sürümlerinde BuildKit varsayılan olarak açıktır.
+
+---
+
+## Hızlı Başlangıç: `docker init`
+
+Docker CLI 25+ ile gelen `docker init` komutu, projeniz için otomatik olarak **Dockerfile**, **Compose dosyası** ve **.dockerignore** oluşturur:
+
+```bash
+# Proje dizininde çalıştırın
+docker init
+```
+
+Bu komut size interaktif bir sihirbaz sunar: projenizin dilini (Node.js, Python, Go, Java vb.) sorar ve o dile uygun, best-practice Dockerfile'ı saniyeler içinde hazırlar. Sıfırdan yazmak yerine buradan başlayıp özelleştirmek çok daha hızlıdır.
 
 ---
 *İmajları oluşturmayı da öğrendik. Ancak konteynerler silindiğinde içindeki verilere ne olur? Sıradaki bölümde Veri Yönetimi (Volumes) konusunu işleyeceğiz.*

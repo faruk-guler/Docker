@@ -10,7 +10,7 @@ DevContainer kullanmak için projenizin ana dizininde `.devcontainer` adında bi
 
 ### Gelişmiş Bir `devcontainer.json` Örneği
 
-```json
+```jsonc
 {
   "name": "Node.js & TypeScript Kurumsal Ortam",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:18",

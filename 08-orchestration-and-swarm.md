@@ -74,7 +74,7 @@ docker network create \
   benim-guvenli-agim
 ```
 
-Böylece sunucular arasındaki trafik (ISP seviyesinde bile) AES algoritmasıyla donanımsal olarak şifrelenir.
+Böylece sunucular arasındaki trafik (ISP seviyesinde bile) IPsec protokolü ile AES algoritması kullanılarak şifrelenir. *(Sunucu CPU'su AES-NI komut setini destekliyorsa donanım hızlandırmalı çalışır).*
 
 ### C. Sıfır Kesintiyle Güncelleme (Rolling Update)
 

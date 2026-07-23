@@ -20,16 +20,16 @@ plugins:
 Arka planda (background) bir konteyner oluşturup çalıştırmak:
 
 ```shell
-docker run -d -p 80:80 docker/getting-started
+docker run -d -p 80:80 docker/welcome-to-docker
 ```
 
 ---
 
 - `-d` - Konteyneri arka planda (detached mode) çalıştırır
 - `-p 80:80` - Host makinedeki 80 portunu konteynerin 80 portuna bağlar
-- `docker/getting-started` - Kullanılacak imaj
+- `docker/welcome-to-docker` - Kullanılacak imaj
 
-Ön planda (foreground) etkileşimli bir konteyner çalıştırmak:
+İsim vererek arka planda bir web sunucusu başlatmak:
 
 ```shell
 docker run -d -p 8001:80 --name my-nginx nginx
@@ -343,11 +343,11 @@ docker push localhost:5000/myadmin/nginx
 
 ### Toplu İşlemler (Batch Clean)
 
-| Örnek                               | Açıklama                                             |
-| ----------------------------------- | ---------------------------------------------------- |
-| `docker stop $(docker ps -q)`       | Çalışan tüm konteynerleri durdurur (Bash/PowerShell) |
-| `docker rm -f $(docker ps -a -q)`   | Tüm konteynerleri zorla siler (Bash/PowerShell)      |
-| `docker rmi -f $(docker images -q)` | Tüm imajları zorla siler (Bash/PowerShell)           |
+| Örnek                               | Açıklama                                                                |
+| ----------------------------------- | ----------------------------------------------------------------------- |
+| `docker stop $(docker ps -q)`       | Çalışan tüm konteynerleri durdurur (Listede konteyner varsa)            |
+| `docker rm -f $(docker ps -a -q)`   | Tüm konteynerleri zorla siler (Alternatif: `docker container prune -f`) |
+| `docker rmi -f $(docker images -q)` | Tüm imajları zorla siler (Alternatif: `docker image prune -a -f`)       |
 
 ### Volume Yönetimi
 

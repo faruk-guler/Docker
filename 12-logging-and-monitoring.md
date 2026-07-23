@@ -57,7 +57,7 @@ docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
 
 services:
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
+    image: ghcr.io/google/cadvisor/cadvisor:v0.49.1 # Güncel cAdvisor deposu (gcr.io yerine ghcr.io tercih edilir)
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
@@ -68,6 +68,8 @@ services:
 
   prometheus:
     image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
 
@@ -78,6 +80,17 @@ services:
     depends_on:
       - prometheus
 ```
+
+> [!NOTE]
+> Yukarıdaki Compose dosyasının çalışması için aynı dizinde bir `prometheus.yml` dosyası oluşturmanız gerekir. Bu dosyada cAdvisor'ın metrik adresini (scrape target) tanımlamalısınız:
+>
+> ```yaml
+> scrape_configs:
+>   - job_name: 'cadvisor'
+>     scrape_interval: 10s
+>     static_configs:
+>       - targets: ['cadvisor:8080']
+> ```
 
 *(Bu dosyayı ayağa kaldırdığınızda `localhost:3000` adresinden Grafana'ya girip, uygulamanızın milisaniyelik tüm performans grafiklerini dev ekranlarda izleyebilirsiniz).*
 
